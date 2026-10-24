@@ -1,108 +1,104 @@
 # portfolio-api
 
-Backend + admin dashboard for [sanchit-portfolio](https://github.com/sanchitjain0/sanchit-portfolio).
+The backend for my [portfolio](https://github.com/sanchitjain0/sanchit-portfolio), plus a small admin dashboard I use to check what comes in.
 
-- **API**: Fastify 5 + TypeScript + Zod + Mongoose (MongoDB Atlas).
-- **Dashboard**: React + Vite + Tailwind, built into the server and served at **`/admin`** (same origin → simple, secure cookie login).
-- **Hosting**: one free Render web service + a free Atlas M0 cluster. No AI/LLM costs: "Ask my portfolio" answers from a knowledge base you edit in the dashboard.
+It's a Fastify + TypeScript service with MongoDB (Atlas free tier). The dashboard is a React app that gets built into the server and served at `/admin`, so the whole thing is one Render service.
 
-```
-Portfolio (Vercel) ──HTTPS──► Render: Fastify ── /v1/*        public API (CORS: portfolio only)
-                                             ├─ /v1/admin/*  admin API (cookie session, same-origin)
-                                             └─ /admin       React dashboard
-                                                   │
-                                                   ▼
-                                        MongoDB Atlas (free M0)
-```
+## What it does
 
-## What it stores and what you can do in the dashboard
+The portfolio sends a few kinds of things here, and they all end up in Mongo:
 
-| Portfolio feature | Endpoint | Stored in | Dashboard page |
-| --- | --- | --- | --- |
-| Contact form | `POST /v1/contact` | `contacts` | **Inbox**: read, reply by email, mark replied/archived/spam, private notes, search |
-| "Ask my portfolio" chat | `POST /v1/ai/ask` | `chatlogs` (90 days) | **Chat questions**: see unanswered questions → one click to add an answer |
-| Knowledge base for the chat | — | `knowledges` | **Knowledge base**: add/edit answers + keywords, see hit counts |
-| Guestbook | `GET/POST /v1/guestbook` | `guestbooks` | **Guestbook**: approve / reject (nothing is public until approved) |
-| ❤ project reactions | `GET/POST /v1/reactions` | `reactions` | Overview: reactions per project |
-| Availability, "currently working on", banner | `GET /v1/public/config` | `siteconfigs` | **Site settings**: changes go live within ~1 minute, no redeploy |
-| Anonymous analytics | `POST /v1/events` | `events` (90 days) | Overview: visitors, page views, top sections, devices, referrers, resume downloads |
-| Architecture "test order" | `POST /v1/demo/orders` | `demoorders` (30 days) | Overview count |
-| TagHawk demo listings | `GET /v1/taghawk/listings` | — (static) | — |
-| Admin activity | — | `audits` (180 days) | **Audit log**: logins (incl. failed) and changes |
+- contact form messages
+- questions people type into the "ask my portfolio" chat. Answers come from a small keyword-based knowledge base, not an LLM, so there's no API bill.
+- guestbook notes. They stay hidden until I approve them.
+- likes on projects (one per visitor)
+- basic analytics: page and section views, resume downloads, devices, referrers. No cookies, IPs are hashed, and Do Not Track is respected.
+- the "send a test order" demo from the architecture section
 
-**Export data** (Overview page) downloads everything as JSON. Atlas M0 has no automatic backups, so export now and then.
+From the dashboard I can:
+
+- read and reply to messages
+- see which chat questions had no answer and add one
+- approve guestbook notes
+- change the availability badge and banner on the site without redeploying
+- export everything as JSON
+- see a log of admin logins
 
 ## Security
 
-- **Admin login**: single account from env vars, password stored only as a **bcrypt hash**. The session is an 8-hour JWT in an `HttpOnly; Secure; SameSite=Strict` cookie. Writes also require an `X-Requested-With` header (CSRF guard). Admin routes send no CORS headers, so other sites can't call them.
-- **Brute force**: 5 login attempts per 15 minutes per IP; every attempt is in the audit log.
-- **Rate limits per IP**: global 120/min; contact 5/hour, guestbook 3/hour, chat 20/min, reactions 30/min, events 60/min, demo orders 20/hour. Plus **daily global caps** on contacts/guestbook/events.
-- **Validation**: strict Zod schemas on every route (unknown fields rejected, length limits, only primitive values → no NoSQL operator injection), 16 KB body limit, honeypot fields, link/spam detection (spam goes to the Spam tab / rejected).
-- **CORS**: only the origins in `CORS_ORIGINS`.
-- **Headers**: Helmet (CSP, HSTS, nosniff, frame-ancestors none).
-- **Privacy**: IPs are never stored, only salted hashes; analytics use a daily-rotating visitor hash and respect Do Not Track; logs auto-expire (TTL indexes).
-- **Real client IP**: only Render's proxy hop is trusted (`TRUST_PROXY_HOPS=1`), so a forged `X-Forwarded-For` can't dodge rate limits.
+I didn't want this to be an open door, so:
 
-## Run locally
+- There's one admin account. The password is only stored as a bcrypt hash in an env var. Login gives an 8 hour session cookie (HttpOnly, Secure, SameSite=Strict), and write requests also need an `X-Requested-With` header.
+- Login is limited to 5 tries per 15 minutes per IP, and every attempt goes into the audit log.
+- Every route has its own rate limit (contact form 5/hour, guestbook 3/hour, chat 20/min, ...) and there are daily caps on top.
+- Request bodies are validated with strict Zod schemas. Unknown fields get rejected and values have to be plain strings or numbers, so Mongo operators can't sneak in. Bodies are capped at 16 KB.
+- CORS only allows the portfolio's domain. Admin routes don't send CORS headers at all.
+- Helmet sets the usual headers (CSP, HSTS and so on).
+- Only Render's proxy hop is trusted for the client IP, so faking `X-Forwarded-For` doesn't get around the limits.
+- Logs and analytics expire on their own (TTL indexes).
+
+## Running locally
 
 ```bash
 npm install
-npm run dev:memory          # throwaway in-memory MongoDB, nothing to set up
-# → http://localhost:8080/admin   (admin / admin-password-123)
-npm test                    # 21 API tests against an in-memory MongoDB
+npm run dev:memory
 ```
 
-Against a real database: copy `.env.example` to `.env`, fill it in, then `npm run dev` (API) and `npm run dev:dashboard` (dashboard with hot reload on :5174, proxied to the API).
+That starts an in-memory MongoDB and the API on port 8080. Open http://localhost:8080/admin and log in with `admin` / `admin-password-123`. Nothing is saved when you stop it.
 
-## Deploy (free)
+To use a real database, copy `.env.example` to `.env`, fill it in and run `npm run dev`. For working on the dashboard with hot reload, run `npm run dev:dashboard` (port 5174) at the same time.
 
-### 1. MongoDB Atlas (free M0)
-1. [cloud.mongodb.com](https://cloud.mongodb.com) → create a **Free (M0)** cluster (region close to Singapore/Mumbai).
-2. **Database Access** → add a user with a long random password, role **readWrite** on database `portfolio` only.
-3. **Network Access** → `0.0.0.0/0` (Render's free tier has no fixed IP; the strong user password is the protection).
-4. **Connect → Drivers** → copy the URI and put the database name in the path:
-   `mongodb+srv://USER:PASS@cluster0.xxxx.mongodb.net/portfolio?retryWrites=true&w=majority`
+Tests run against an in-memory Mongo too:
 
-### 2. Admin password hash
 ```bash
-npm run hash-password -- 'a long password you will remember'
+npm test
 ```
-Copy the `$2b$12$…` output.
 
-### 3. Render
-1. Push this repo to GitHub (keep it **private** if you like; it doesn't matter for the free plan).
-2. [render.com](https://render.com) → **New → Blueprint** → select the repo (uses `render.yaml`).
-3. Fill in the prompted values:
-   - `MONGODB_URI`: from step 1
-   - `ADMIN_USERNAME`: e.g. `sanchit`
-   - `ADMIN_PASSWORD_HASH`: from step 2
-   - `CORS_ORIGINS`: `https://sanchit-portfolio.vercel.app` (your exact Vercel URL; add a custom domain here too later, comma-separated)
+## Deploying (all free)
 
-   `JWT_SECRET` and `IP_HASH_SALT` are generated automatically.
-4. Deploy. Check `https://<service>.onrender.com/v1/health`, then log in at `https://<service>.onrender.com/admin`.
+1. **MongoDB Atlas.** Create an M0 cluster. Add a database user with `readWrite` on the `portfolio` database only and a long password. Allow network access from `0.0.0.0/0`, since Render's free plan has no fixed IP. Copy the connection string and put `portfolio` in the path:
 
-### 4. Connect the portfolio (Vercel)
-Vercel → sanchit-portfolio → Settings → Environment Variables:
-`VITE_API_BASE_URL = https://<service>.onrender.com/v1` → **Redeploy**. The footer dot turns green ("API online").
+   ```
+   mongodb+srv://USER:PASS@cluster0.xxxx.mongodb.net/portfolio?retryWrites=true&w=majority
+   ```
 
-## Free-tier notes
+2. **Admin password.** Generate the hash and keep the output:
 
-- **Render free services sleep after 15 minutes idle**; the first request takes ~30–60 s. The portfolio pings `/health` on page load to wake it, shows mock data until it's up, and the contact form waits (with a "waking up the server" note) instead of failing.
-  - Optional: a free [UptimeRobot](https://uptimerobot.com) monitor on `/v1/health` every 10 min keeps it awake. One always-on service uses ~744 of the 750 free hours/month, so don't add a second always-on free service.
-- **Atlas M0**: 512 MB, plenty for this. Logs/events expire automatically.
-- No paid APIs. Total cost: **$0**.
+   ```bash
+   npm run hash-password -- 'some long password'
+   ```
 
-## Project layout
+3. **Render.** New → Blueprint → pick this repo. It reads `render.yaml` and asks for:
+   - `MONGODB_URI`
+   - `ADMIN_USERNAME`
+   - `ADMIN_PASSWORD_HASH`
+   - `CORS_ORIGINS` (`https://sanchit-portfolio-chi.vercel.app`)
+
+   `JWT_SECRET` and `IP_HASH_SALT` are generated for you.
+
+4. **Vercel.** On the portfolio project, set `VITE_API_BASE_URL` to `https://<service>.onrender.com/v1` and redeploy. The dot in the site's footer turns green when it's connected.
+
+Health check: `GET /v1/health`.
+
+A few things to know about the free tiers:
+
+- Render puts the service to sleep after 15 minutes without traffic, and waking it takes 30–60 seconds. The portfolio pings `/health` when the page opens, and the contact form waits instead of failing. If that bothers you, an UptimeRobot check every 10 minutes keeps it awake, and it still fits in the 750 free hours.
+- Atlas M0 has no automatic backups. That's what the export button is for.
+- The default knowledge base is only seeded when the collection is empty. After the first start, edit answers from the dashboard.
+
+## Layout
 
 ```
 server/
-  src/app.ts            Fastify setup: security headers, CORS, rate limits, errors, dashboard hosting
-  src/routes/public.ts  endpoints the portfolio calls
-  src/routes/auth.ts    login / logout / me
-  src/routes/admin.ts   dashboard API (stats, inbox, chats, guestbook, config, knowledge, export, audit)
-  src/models.ts         Mongoose schemas (+ TTL indexes)
-  src/lib/knowledge.ts  chat knowledge base: defaults + keyword matcher
-  test/api.test.ts      end-to-end tests (in-memory MongoDB)
-dashboard/              React admin app (built into server/public/admin)
-render.yaml             Render blueprint
+  src/app.ts             Fastify setup, security plugins, error handling, serves the dashboard
+  src/routes/public.ts   endpoints the portfolio calls
+  src/routes/auth.ts     login / logout / session check
+  src/routes/admin.ts    everything the dashboard uses
+  src/models.ts          Mongoose models
+  src/lib/knowledge.ts   chat answers + keyword matching
+  test/api.test.ts       end-to-end tests
+dashboard/               React admin app
+render.yaml              Render blueprint
 ```
+
+The API contract the frontend expects is in the portfolio repo under `docs/API.md`.

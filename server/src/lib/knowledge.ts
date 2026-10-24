@@ -10,7 +10,7 @@ export const DEFAULT_KNOWLEDGE: Omit<KnowledgeDoc, 'hits' | 'createdAt' | 'updat
     question: 'What does Sanchit work on right now?',
     keywords: ['now', 'current', 'currently', 'americana', 'job', 'role', 'work on', 'kfc', 'pizza', 'hardee', 'restaurant'],
     answer:
-      "He's a Senior Backend Developer at Americana Restaurants (Jan 2026 – present), building on a 21+ microservice ordering platform behind KFC, Pizza Hut, Hardee's and Krispy Kreme across MENA and Central Asia.",
+      "He's a Senior Backend Developer at Americana Restaurants (Jan 2026 – present), building features across the 21+ microservice ordering platform behind KFC, Pizza Hut, Hardee's and Krispy Kreme in MENA and Central Asia: Koa, gRPC, Kafka and RabbitMQ on Kubernetes with Linkerd.",
     enabled: true,
   },
   {
@@ -18,7 +18,7 @@ export const DEFAULT_KNOWLEDGE: Omit<KnowledgeDoc, 'hits' | 'createdAt' | 'updat
     question: 'What is his tech stack?',
     keywords: ['stack', 'skill', 'skills', 'tech', 'technology', 'language', 'framework', 'tools'],
     answer:
-      'Backend: Node.js, TypeScript, NestJS, Koa, Express, gRPC, GraphQL. Data: MongoDB, PostgreSQL, MySQL, Aerospike, Redis, Elasticsearch. Messaging: Kafka, RabbitMQ. Cloud: AWS, Azure, Docker, Kubernetes. Frontend: React, TypeScript, Tailwind.',
+      'Backend: Node.js, TypeScript, NestJS, Express, Koa, gRPC, GraphQL, WebSockets. Data: MongoDB, PostgreSQL, MySQL, Aerospike, Redis, Elasticsearch. Messaging: Kafka, RabbitMQ. Cloud: AWS, Azure, Docker, Kubernetes, Linkerd. Frontend: React 19, Tailwind, Three.js.',
     enabled: true,
   },
   {
@@ -26,7 +26,7 @@ export const DEFAULT_KNOWLEDGE: Omit<KnowledgeDoc, 'hits' | 'createdAt' | 'updat
     question: 'Tell me about TagHawk',
     keywords: ['taghawk', 'tag hawk', 'marketplace', 'ecommerce', 'e-commerce'],
     answer:
-      'TagHawk is a community marketplace to buy, sell and move used items. He built the backend: community-scoped listings and search, transactional inventory (no overselling), anonymous real-time chat over Socket.IO and escrow-style payments.',
+      'TagHawk is a campus and apartment resale marketplace. He built the backend: Elasticsearch listing search, transactional inventory that prevents overselling, anonymous Socket.IO chat and escrow payments.',
     enabled: true,
   },
   {
@@ -42,7 +42,7 @@ export const DEFAULT_KNOWLEDGE: Omit<KnowledgeDoc, 'hits' | 'createdAt' | 'updat
     question: 'What results has he delivered?',
     keywords: ['impact', 'result', 'achievement', 'latency', 'performance', 'incident', 'scale', 'orders'],
     answer:
-      'Platforms handling 200K+ orders/day, critical API latency cut from ~2.5s to ~300ms, ~40% fewer production incidents, 50K+ abusive requests blocked per day, and kiosk ordering live in 10+ countries.',
+      'Platforms handling 200K+ orders/day, API latency cut from ~2.5s to ~300ms, ~40% fewer production incidents, 50K+ abusive requests blocked per day, a net 46K lines removed in a SonarQube clean-up, and kiosk ordering live in 10+ countries.',
     enabled: true,
   },
   {
@@ -50,7 +50,7 @@ export const DEFAULT_KNOWLEDGE: Omit<KnowledgeDoc, 'hits' | 'createdAt' | 'updat
     question: 'How does he use AI?',
     keywords: ['ai', 'claude', 'gemini', 'codex', 'copilot', 'llm', 'gpt'],
     answer:
-      'He uses AI tools such as Claude, Codex, Gemini and GitHub Copilot to ship faster: refactors, tests, code review and research, and he has integrated the Claude API into Node.js backends.',
+      'He works with the Claude API, Claude Code, GitHub Copilot, OpenAI Codex and Gemini: Claude integrated into Node.js backends, plus AI-assisted refactors, tests and code review.',
     enabled: true,
   },
   {

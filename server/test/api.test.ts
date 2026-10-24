@@ -9,7 +9,7 @@ import { loadEnv } from '../src/env.js'
 import { seedKnowledge } from '../src/lib/knowledge.js'
 import { ChatLog, Contact } from '../src/models.js'
 
-const PORTFOLIO = 'https://sanchit-portfolio.vercel.app'
+const PORTFOLIO = 'https://sanchit-portfolio-chi.vercel.app'
 const PASSWORD = 'correct-horse-battery-staple'
 let mongo: MongoMemoryServer
 let app: FastifyInstance

@@ -15,6 +15,8 @@ export const REACTION_PROJECTS = [
   'snowball',
   'crew-connex',
   'taghawk',
+  'sonarqube-cleanup',
+  'portfolio-platform',
 ] as const
 
 const startedAt = Date.now()
