@@ -1,0 +1,33 @@
+# Render Blueprint – one free web service: Fastify API + admin dashboard (served at /admin).
+# Render → New → Blueprint → pick this repo. You'll be asked for the `sync: false` values.
+services:
+  - type: web
+    name: sanchit-portfolio-api
+    runtime: node
+    plan: free
+    region: singapore # closest free region to India
+    branch: main
+    autoDeploy: true
+    # devDependencies (TypeScript, Vite) are needed to build; Render sets NODE_ENV=production
+    buildCommand: npm ci --include=dev && npm run build
+    startCommand: npm start
+    healthCheckPath: /v1/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: "22"
+      - key: MONGODB_URI
+        sync: false # Atlas connection string
+      - key: ADMIN_USERNAME
+        sync: false
+      - key: ADMIN_PASSWORD_HASH
+        sync: false # npm run hash-password -- '<password>'
+      - key: CORS_ORIGINS
+        sync: false # e.g. https://sanchit-portfolio.vercel.app
+      - key: JWT_SECRET
+        generateValue: true
+      - key: IP_HASH_SALT
+        generateValue: true
+      - key: TRUST_PROXY_HOPS
+        value: "1"

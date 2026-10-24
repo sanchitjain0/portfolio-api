@@ -1,0 +1,23 @@
+{
+  "name": "portfolio-api",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Fastify API + admin dashboard for sanchit-portfolio",
+  "workspaces": [
+    "server",
+    "dashboard"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "npm run dev -w server",
+    "dev:dashboard": "npm run dev -w dashboard",
+    "build": "npm run build -w dashboard && npm run build -w server",
+    "start": "npm start -w server",
+    "test": "npm test -w server",
+    "lint": "npm run typecheck -w server && npm run typecheck -w dashboard",
+    "hash-password": "npm run hash-password -w server --",
+    "dev:memory": "npm run dev:memory -w server"
+  }
+}
